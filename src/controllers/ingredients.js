@@ -31,13 +31,20 @@ const get_ingredient_by_type = async (req, res) => {
 // Search Ingredients
 const search_ingredients = async (req, res) => {
   try {
-    const { searchItem } = req.query;
+    let { searchItem, page } = req.query;
 
-    const params = [];
-    params.push(`%${searchItem}%`);
+    page = page ? page : 0;
+
+    let whereClause = "";
+    const params = [page * 5];
+
+    if (searchItem) {
+      whereClause = "WHERE CONCAT(title, type) ILIKE $2";
+      params.push(`%${searchItem}%`);
+    }
 
     const { rows } = await pool.query(
-      `SELECT * FROM ingredients WHERE CONCAT(title, type) ILIKE $1`,
+      `SELECT * FROM ingredients ${whereClause} OFFSET $1 LIMIT 5`,
       params
     );
 
